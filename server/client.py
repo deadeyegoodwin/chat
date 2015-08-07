@@ -86,14 +86,12 @@ class CserverClient:
                         for rn, ru in room_names:
                             msg.append("* {0} ({1})".format(rn, len(ru)))
                         msg.append("End of list.")
-                    elif cmd[0] is CserverCmd.LEAVE_ROOM:
+                    elif cmd[0] is CserverCmd.CREATE_ROOM:
                         user, room = (cmd[1], cmd[2])
-                        msg = ("* user has left {0}: {1} (** this is you)".format(room, user),)
-                        self.state = CserverClientState.LOGGED_IN
-                        self.roomname = None
-                    elif cmd[0] is CserverCmd.SEE_LEAVE_ROOM:
+                        msg = ("* user has created {0}: {1} (** this is you)".format(room, user),)
+                    elif cmd[0] is CserverCmd.SEE_CREATE_ROOM:
                         user, room = (cmd[1], cmd[2])
-                        msg = ("* user has left {0}: {1}".format(room, user),)
+                        msg = ("* user has created {0}: {1}".format(room, user),)
                     elif cmd[0] is CserverCmd.JOIN_ROOM:
                         user, room, room_users = (cmd[1], cmd[2], cmd[3])
                         msg = ["Entering room: {0}".format(room),]
@@ -108,8 +106,18 @@ class CserverClient:
                     elif cmd[0] is CserverCmd.SEE_JOIN_ROOM:
                         user, room = (cmd[1], cmd[2])
                         msg = ("* new user joined {0}: {1}".format(room, user),)
+                    elif cmd[0] is CserverCmd.LEAVE_ROOM:
+                        user, room = (cmd[1], cmd[2])
+                        msg = ("* user has left {0}: {1} (** this is you)".format(room, user),)
+                        self.state = CserverClientState.LOGGED_IN
+                        self.roomname = None
+                    elif cmd[0] is CserverCmd.SEE_LEAVE_ROOM:
+                        user, room = (cmd[1], cmd[2])
+                        msg = ("* user has left {0}: {1}".format(room, user),)
                     elif cmd[0] is CserverCmd.INVALID_ROOM:
                         msg = ("Sorry, room {0} is not available.".format(cmd[1]),)
+                    elif cmd[0] is CserverCmd.EXISTING_ROOM:
+                        msg = ("Sorry, room {0} already exists.".format(cmd[1]),)
                     elif cmd[0] is CserverCmd.NOT_IN_ROOM:
                         msg = ("Sorry, you are not in a room. Use /join to enter a room",)
                     elif cmd[0] is CserverCmd.QUIT:
