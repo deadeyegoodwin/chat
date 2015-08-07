@@ -118,6 +118,24 @@ def main(argv=None):
                                     for cc in user_clients.values():
                                         if cc != client and cc.state is not CserverClientState.NEW:
                                             cc.outbound_queue.put((CserverCmd.SEE_CREATE_ROOM, client.username, room))
+                            # handle /private and /public
+                            elif msg_kind is CserverMsgKind.PRIVATE_CMD:
+                                if client.state is not CserverClientState.IN_ROOM:
+                                    client.outbound_queue.put((CserverCmd.NOT_IN_ROOM,))
+                                else:
+                                    targets = msg_payload
+                                    if len(targets) > 0:
+                                        for t in targets:
+                                            if t not in room_users[client.roomname]:
+                                                client.outbound_queue.put((CserverCmd.INVALID_PRIVATE, t))
+                                                break
+                                        else:
+                                            client.outbound_queue.put((CserverCmd.PRIVATE, targets))
+                            elif msg_kind is CserverMsgKind.PUBLIC_CMD:
+                                if client.state is not CserverClientState.IN_ROOM:
+                                    client.outbound_queue.put((CserverCmd.NOT_IN_ROOM,))
+                                else:
+                                    client.outbound_queue.put((CserverCmd.PUBLIC,))
                             # handle /join, if user is already in a
                             # room then leave it first
                             elif msg_kind is CserverMsgKind.JOIN_CMD:
@@ -147,13 +165,17 @@ def main(argv=None):
                                     for cc in user_clients.values():
                                         if cc != client and cc.state is CserverClientState.IN_ROOM and cc.roomname == client.roomname:
                                             cc.outbound_queue.put((CserverCmd.SEE_LEAVE_ROOM, client.username, client.roomname))
-                            # handle a normal chat request... this is
-                            # broadcast to everyone in the room
+                            # handle a normal chat request...
                             elif msg_kind is CserverMsgKind.ALL_CHAT:
                                 if client.state is not CserverClientState.IN_ROOM:
                                     client.outbound_queue.put((CserverCmd.NOT_IN_ROOM,))
                                 else:
-                                    for cc in user_clients.values():
+                                    if client.targets is None:
+                                        target_clients = user_clients.values()
+                                    else:
+                                        target_clients = [ user_clients[t] for t in client.targets ]
+                                        target_clients.append(client)
+                                    for cc in target_clients:
                                         if cc.state is CserverClientState.IN_ROOM and cc.roomname == client.roomname:
                                             cc.outbound_queue.put((CserverCmd.MSG, client.username, msg_payload))
                                 

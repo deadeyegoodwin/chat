@@ -43,6 +43,7 @@ class CserverClient:
         self._csocket = csocket
         self.username = None
         self.roomname = None
+        self.targets = None
         self._recv_str = ''
         self.outbound_queue = queue.Queue()
         self._inbound_queue = inbound_queue
@@ -79,6 +80,15 @@ class CserverClient:
                     elif cmd[0] is CserverCmd.MSG:
                         user, cmsg = (cmd[1], cmd[2])
                         msg = ("{0}: {1}".format(user, cmsg),)
+                    elif cmd[0] is CserverCmd.PRIVATE:
+                        targets = cmd[1]
+                        msg = ("* you are now chatting privately: {0}".format(" ".join(targets)),)
+                        self.targets = targets
+                    elif cmd[0] is CserverCmd.PUBLIC:
+                        msg = ("* you are now chatting publicly",)
+                        self.targets = None
+                    elif cmd[0] is CserverCmd.INVALID_PRIVATE:
+                        msg = ("Sorry, user {0} is not available.".format(cmd[1]),)
                     elif cmd[0] is CserverCmd.SHOW_ROOMS:
                         room_names = cmd[1]
                         msg = ["Active rooms are:",]
@@ -110,6 +120,7 @@ class CserverClient:
                         msg = ("* user has left {0}: {1} (** this is you)".format(room, user),)
                         self.state = CserverClientState.LOGGED_IN
                         self.roomname = None
+                        self.targets = None
                     elif cmd[0] is CserverCmd.SEE_LEAVE_ROOM:
                         user, room = (cmd[1], cmd[2])
                         msg = ("* user has left {0}: {1}".format(room, user),)

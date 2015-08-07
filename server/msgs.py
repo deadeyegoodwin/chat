@@ -23,16 +23,20 @@ class CserverCmd(Enum):
     EXISTING_ROOM = 16,
     NOT_IN_ROOM = 17,
     INVALID_ROOMNAME = 18,
-    QUIT = 19
+    PRIVATE = 19,
+    PUBLIC = 20,
+    INVALID_PRIVATE = 21,
+    QUIT = 22
 
 class CserverMsgKind(Enum):
     ALL_CHAT = 0,
-    PRIVATE_CHAT = 1,
-    CREATE_ROOM_CMD = 2,
-    ROOMS_CMD = 3,
-    JOIN_CMD = 4,
-    LEAVE_CMD = 5,
-    QUIT_CMD = 6
+    PRIVATE_CMD = 1,
+    PUBLIC_CMD = 2,
+    CREATE_ROOM_CMD = 3,
+    ROOMS_CMD = 4,
+    JOIN_CMD = 5,
+    LEAVE_CMD = 6,
+    QUIT_CMD = 7
 
 def decode_msg(msg):
     """Return the CserverMsgKind value and payload corresponding to a message.
@@ -56,7 +60,12 @@ def decode_msg(msg):
         return (CserverMsgKind.LEAVE_CMD, None)
     elif msg.startswith('/quit'):
         return (CserverMsgKind.QUIT_CMD, None)
-    
+    elif msg.startswith('/private'):
+        payload = msg[len('/private'):]
+        return (CserverMsgKind.PRIVATE_CMD, payload.strip().split())
+    elif msg.startswith('/public'):
+        return (CserverMsgKind.PUBLIC_CMD, None)
+
     return (CserverMsgKind.ALL_CHAT, msg)
 
 
