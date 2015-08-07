@@ -22,7 +22,8 @@ class CserverCmd(Enum):
     INVALID_ROOM = 15,
     EXISTING_ROOM = 16,
     NOT_IN_ROOM = 17,
-    QUIT = 18
+    INVALID_ROOMNAME = 18,
+    QUIT = 19
 
 class CserverMsgKind(Enum):
     ALL_CHAT = 0,

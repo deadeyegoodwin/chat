@@ -9,10 +9,9 @@ from msgs import CserverCmd
 from threading import Thread
 
 class CserverClientState(Enum):
-        NEW = 1,
-        LOGGED_IN = 2,
-        IN_ROOM = 3
-
+    NEW = 1,
+    LOGGED_IN = 2,
+    IN_ROOM = 3
 
 class CserverClient:
     """Handle interactions with a chat client. Each instance of this class
@@ -116,6 +115,8 @@ class CserverClient:
                         msg = ("* user has left {0}: {1}".format(room, user),)
                     elif cmd[0] is CserverCmd.INVALID_ROOM:
                         msg = ("Sorry, room {0} is not available.".format(cmd[1]),)
+                    elif cmd[0] is CserverCmd.INVALID_ROOMNAME:
+                        msg = ("Sorry, room name must contain only letters, numbers and underscore.",)
                     elif cmd[0] is CserverCmd.EXISTING_ROOM:
                         msg = ("Sorry, room {0} already exists.".format(cmd[1]),)
                     elif cmd[0] is CserverCmd.NOT_IN_ROOM:

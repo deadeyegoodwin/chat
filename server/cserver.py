@@ -18,6 +18,7 @@ from client import CserverClient
 from client import CserverClientState
 
 _username_re = re.compile('\w*$')
+_roomname_re = re.compile('\w*$')
 
 def main(argv=None):
     """The main entry point for the chat server.
@@ -108,6 +109,8 @@ def main(argv=None):
                                 room = msg_payload
                                 if room in room_users:
                                     client.outbound_queue.put((CserverCmd.EXISTING_ROOM, room))
+                                elif not _roomname_re.match(room):
+                                    client.outbound_queue.put((CserverCmd.INVALID_ROOMNAME,))
                                 else:
                                     db['rooms'].add(room)
                                     room_users[room] = set()
