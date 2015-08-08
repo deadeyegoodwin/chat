@@ -134,6 +134,8 @@ class CserverClient:
                         msg = ("Sorry, you are not in a room. Use /join to enter a room",)
                     elif cmd[0] is CserverCmd.QUIT:
                         msg = ("BYE",)
+                    elif cmd[0] is CserverCmd.INVALID_CMD:
+                        msg = ("Sorry, you have entered an unknown command",)
 
                     if msg is not None:
                         for m in msg:

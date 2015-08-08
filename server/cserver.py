@@ -97,13 +97,9 @@ def main(argv=None):
                             # message to see if it is a command
                             # (e.g. /rooms) or a regular chat message
                             msg_kind, msg_payload = msgs.decode_msg(cmd[2])
-                            # handle /rooms and /quit command
+                            # handle /rooms
                             if msg_kind is CserverMsgKind.ROOMS_CMD:
                                 client.outbound_queue.put((CserverCmd.SHOW_ROOMS, _get_room_list(room_users)))
-                            elif msg_kind is CserverMsgKind.QUIT_CMD:
-                                if client.username in user_clients:
-                                    del user_clients[client.username]
-                                client.outbound_queue.put((CserverCmd.QUIT,))
                             # handle /create
                             elif msg_kind is CserverMsgKind.CREATE_ROOM_CMD:
                                 room = msg_payload
@@ -165,6 +161,17 @@ def main(argv=None):
                                     for cc in user_clients.values():
                                         if cc != client and cc.state is CserverClientState.IN_ROOM and cc.roomname == client.roomname:
                                             cc.outbound_queue.put((CserverCmd.SEE_LEAVE_ROOM, client.username, client.roomname))
+                            # handle /quit, leave room first if in a room
+                            elif msg_kind is CserverMsgKind.QUIT_CMD:
+                                if client.state is CserverClientState.IN_ROOM:
+                                    room_users[client.roomname].remove(client.username)
+                                    client.outbound_queue.put((CserverCmd.LEAVE_ROOM, client.username, client.roomname))
+                                    for cc in user_clients.values():
+                                        if cc != client and cc.state is CserverClientState.IN_ROOM and cc.roomname == client.roomname:
+                                            cc.outbound_queue.put((CserverCmd.SEE_LEAVE_ROOM, client.username, client.roomname))
+                                if client.username in user_clients:
+                                    del user_clients[client.username]
+                                client.outbound_queue.put((CserverCmd.QUIT,))
                             # handle a normal chat request...
                             elif msg_kind is CserverMsgKind.ALL_CHAT:
                                 if client.state is not CserverClientState.IN_ROOM:
@@ -178,6 +185,9 @@ def main(argv=None):
                                     for cc in target_clients:
                                         if cc.state is CserverClientState.IN_ROOM and cc.roomname == client.roomname:
                                             cc.outbound_queue.put((CserverCmd.MSG, client.username, msg_payload))
+                            # handle unknown command...
+                            elif msg_kind is CserverMsgKind.UNKNOWN_CMD:
+                                client.outbound_queue.put((CserverCmd.INVALID_CMD,))
                                 
                     else:
                         logger.error("unexpected command: {0}".format(cmd))
