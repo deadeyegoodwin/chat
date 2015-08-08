@@ -5,6 +5,12 @@ import logging
 from enum import Enum
 
 class CserverCmd(Enum):
+    """The commands send from the server to the CserverClient instances
+    representing each connection chat client. These commands direct
+    the client to update state and/or send messages to the chat
+    client.
+
+    """
     NEW_CLIENT = 1,
     BANNER = 2,
     LOGIN = 3,
@@ -30,6 +36,11 @@ class CserverCmd(Enum):
     QUIT = 23
 
 class CserverMsgKind(Enum):
+    """Types of messages delivered by a CserverClient to the server. Each
+    type represents a chat command or chat message entered by the chat
+    user.
+
+    """
     ALL_CHAT = 0,
     PRIVATE_CMD = 1,
     PUBLIC_CMD = 2,
@@ -41,13 +52,15 @@ class CserverMsgKind(Enum):
     UNKNOWN_CMD = 8
 
 def decode_msg(msg):
-    """Return the CserverMsgKind value and payload corresponding to a message.
+    """Return the CserverMsgKind value and payload corresponding to a chat
+    message.
 
     Args:
     
     msg (str): the message
 
     Return a tuple of CserverMsgKind and payload (str)
+
     """
     msg = msg.strip()
     if msg.startswith('/create'):

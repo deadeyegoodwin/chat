@@ -9,6 +9,7 @@ from msgs import CserverCmd
 from threading import Thread
 
 class CserverClientState(Enum):
+    """The state of a chat client."""
     NEW = 1,
     LOGGED_IN = 2,
     IN_ROOM = 3
@@ -19,13 +20,37 @@ class CserverClient:
 
     Attributes:
 
-    _csocket: the socket connecting to the client
+    state (CserverClientState): the state of the client
 
     username (str): the name of the user currently logged in from
     this client, or None if no user logged in
 
+    roomname (str): the name of the room this client has joined, or
+    None if client is not in a room.
+
+    targets (list of str): the names of the user that all chat
+    messages are directed to or None if chat messages should be
+    directed to all users in the room
+
+    outbound_queue (queue.Queue): the queue used by the server main
+    thread to communicate with this client. The server communicates
+    CserverCmds using this queue.
+
+    _csocket: the socket connecting to the client
+
     _recv_str (str): buffer to hold incoming client messages and chunk
     them into lines
+
+    _inbound_queue (queue.Queue): the queue used to communicate to the
+    main server thread
+
+    _outbound_thread: the thread managing sends to the socket
+    connected to the chat client. This thread receives commands from
+    the main server thread via output_queue.
+
+    _inbound_thread: the thread managing recvs from the socket connect
+    to the chat client. This thread forwards received messages to the
+    main server thread using _inbound_queue
 
     """
     def __init__(self, csocket, inbound_queue):
@@ -36,14 +61,14 @@ class CserverClient:
         csocket: the socket connecting to the client
 
         inbound_queue (queue.Queue): the queue the client uses to
-        communicate inbound activity
+        communicate inbound activity to the main server thread
 
         '''
         self.state = CserverClientState.NEW
-        self._csocket = csocket
         self.username = None
         self.roomname = None
         self.targets = None
+        self._csocket = csocket
         self._recv_str = ''
         self.outbound_queue = queue.Queue()
         self._inbound_queue = inbound_queue
