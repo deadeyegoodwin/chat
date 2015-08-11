@@ -4,6 +4,7 @@
 import logging
 import queue
 import socket
+from curses import ascii
 from enum import Enum
 from msgs import CserverCmd
 from threading import Thread
@@ -233,8 +234,11 @@ class CserverClient:
                 if not m:
                     logging.error('failed to recv message, client disconnected')
                     return None
-                self._recv_str = self._recv_str + m.decode()
-                if self._recv_str.find('\n') >= 0:
+                # Decode the incoming data as utf-8 ignoring any
+                # control characters
+                m = bytes([ b if ascii.isgraph(b) or ascii.isspace(b) else 0xff for b in m ])
+                self._recv_str = self._recv_str + m.decode('utf-8', 'ignore')
+                if self._recv_str.find('\n') or self._recv_str.find('\r') >= 0:
                     lines = self._recv_str.splitlines()
                     self._recv_str = '\n'.join(lines[1:])
                     return lines[0]
