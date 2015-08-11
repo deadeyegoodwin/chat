@@ -238,7 +238,7 @@ class CserverClient:
                 # control characters
                 m = bytes([ b if ascii.isgraph(b) or ascii.isspace(b) else 0xff for b in m ])
                 self._recv_str = self._recv_str + m.decode('utf-8', 'ignore')
-                if self._recv_str.find('\n') or self._recv_str.find('\r') >= 0:
+                if self._recv_str.find('\n') >= 0 or self._recv_str.find('\r') >= 0:
                     lines = self._recv_str.splitlines()
                     self._recv_str = '\n'.join(lines[1:])
                     return lines[0]
